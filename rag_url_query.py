@@ -2,6 +2,7 @@
 
 import subprocess
 import sys
+import argparse
 
 REQUIRED_PACKAGES = [
     "llama-index",
@@ -26,10 +27,21 @@ from llama_index.readers.web import SimpleWebPageReader
 from llama_index.llms.openai import OpenAI
 
 # 1. Load documents from URLs
-urls = [
-    "https://en.wikipedia.org/wiki/Containerization",
-    "https://opensource.com/article/18/10/introduction-containers"
-]
+def load_urls_from_file(file_path="urls.txt"):
+    try:
+        with open(file_path, "r") as f:
+            return [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        print(f"Error: {file_path} not found. Please create it with one URL per line.")
+        sys.exit(1)
+
+parser = argparse.ArgumentParser(description="RAG with Ramalama")
+parser.add_argument("file_path", nargs="?", default="urls.txt", help="Path to the file containing URLs")
+parser.add_argument("--model", default="llama3.1:8b-instruct", help="Model name to use")
+args = parser.parse_args()
+
+urls = load_urls_from_file(args.file_path)
+print(f"Loaded {len(urls)} URLs from {args.file_path}.")
 print("Downloading and parsing URLs...")
 documents = SimpleWebPageReader().load_data(urls)
 
@@ -41,7 +53,7 @@ index = VectorStoreIndex.from_documents(documents)
 llm = OpenAI(
     api_key="dummy",  # required but unused
     api_base="http://localhost:8000/v1",
-    model="llama3.1:8b-instruct",
+    model=args.model,
 )
 
 query_engine = index.as_query_engine(llm=llm)

@@ -1,0 +1,2 @@
+https://en.wikipedia.org/wiki/Containerization
+https://opensource.com/article/18/10/introduction-containers
